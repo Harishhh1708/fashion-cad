@@ -1,17 +1,40 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Dashboard · FashionCAD Studio</title></head><body>
-<div class="dash"><aside class="side"><a class="logo" href="dashboard.html">Fashion<i>CAD</i></a><nav style="margin-top:1.2rem">
-<a class="m" href="dashboard.html">Dashboard</a><a class="m soon">Pattern drafting (soon)</a><a class="m soon">Fabric library (soon)</a><a class="m soon">3D studio (soon)</a><a class="m soon">Projects (soon)</a>
-<a class="m" href="#" id="theme">Switch theme</a><a class="m" href="#" id="out">Log out</a></nav></aside>
+<div class="dash"><aside class="side" id="side"></aside>
 <main class="main"><h1 style="font-size:2.4rem" id="hi">Your studio</h1><p style="color:var(--dim)" id="sub"></p>
-<div class="grid"><div class="t"><h3>New pattern</h3><p>The 2D drafting canvas arrives in Phase 3.</p><span class="tag">Not available yet</span></div>
-<div class="t"><h3>Browse fabrics</h3><p>The fabric library arrives in Phase 4.</p><span class="tag">Not available yet</span></div>
-<div class="t"><h3>Open 3D studio</h3><p>The 3D preview arrives in Phase 5.</p><span class="tag">Not available yet</span></div></div></main></div>
+<h2 style="margin-top:2rem">New project</h2>
+<form class="newp" id="np"><div><label for="pn">Project name</label><input id="pn" maxlength="60" placeholder="Kurta for Diwali collection" required></div>
+<div><label for="pg">Garment</label><select id="pg"><option>T-Shirt</option><option>Shirt</option><option>Kurta</option><option>Blouse</option><option>Dress</option><option>Trousers</option><option>Jacket</option><option>Other</option></select></div>
+<button class="btn" type="submit">Create</button></form>
+<div id="msg" class="msg" hidden role="alert" style="max-width:760px"></div>
+<h2 style="margin-top:2rem">Your projects</h2><p class="hint">The pattern editor opens these in Phase 3. For now you can create, rename and delete them.</p>
+<ul class="plist" id="pl"></ul></main></div>
 <script type="module">
-import {requireAuth,logOut,db,doc,getDoc} from "./js/auth.js";
+import {requireAuth,showMsg} from "./js/auth.js";import {renderShell} from "./js/shell.js";
+import {loadProfile,listProjects,createProject,renameProject,removeProject} from "./js/account.js";
+renderShell("dashboard.html");
 requireAuth(async u=>{
- let name=u.displayName||"";try{const s=await getDoc(doc(db,"users",u.uid));if(s.exists())name=s.data().name||name}catch(e){}
- document.getElementById("hi").textContent=name?"Welcome, "+name.split(" ")[0]:"Your studio";
- document.getElementById("sub").textContent="Signed in as "+u.email;});
-document.getElementById("out").onclick=async e=>{e.preventDefault();await logOut();location.href="login.html"};
-document.getElementById("theme").onclick=e=>{e.preventDefault();const r=document.documentElement,n=r.dataset.theme==="light"?"dark":"light";r.dataset.theme=n;try{localStorage.setItem("fc-theme",n)}catch(x){}};
+ const msg=document.getElementById("msg"),pl=document.getElementById("pl");
+ try{const p=await loadProfile(u.uid);const n=p.name||u.displayName||"";
+  document.getElementById("hi").textContent=n?"Welcome, "+n.split(" ")[0]:"Your studio";
+  if(p.settings){try{localStorage.setItem("fc-units",p.settings.units||"cm")}catch(e){}}}catch(e){}
+ document.getElementById("sub").textContent="Signed in as "+u.email;
+ async function draw(){
+  pl.textContent="";let items=[];
+  try{items=await listProjects(u.uid)}catch(e){showMsg(msg,"Couldn't load projects. Check your Firestore rules and connection.");return}
+  if(!items.length){const li=document.createElement("li");li.textContent="No projects yet. Create your first one above.";pl.append(li);return}
+  items.forEach(p=>{const li=document.createElement("li");
+   const t=document.createElement("div");const b=document.createElement("strong");b.textContent=p.name;
+   const s=document.createElement("small");s.textContent=" "+(p.garmentType||"");t.append(b,document.createElement("br"),s);
+   const a=document.createElement("div");a.className="acts";
+   const o=document.createElement("button");o.className="mini";o.textContent="Open";o.disabled=true;o.title="Editor arrives in Phase 3";
+   const r=document.createElement("button");r.className="mini";r.textContent="Rename";
+   r.onclick=async()=>{const n=prompt("New project name",p.name);if(n&&n.trim()){try{await renameProject(u.uid,p.id,n.trim().slice(0,60));draw()}catch(e){showMsg(msg,"Couldn't rename the project.")}}};
+   const d=document.createElement("button");d.className="mini";d.textContent="Delete";
+   d.onclick=async()=>{if(confirm("Delete \""+p.name+"\"? This can't be undone.")){try{await removeProject(u.uid,p.id);draw()}catch(e){showMsg(msg,"Couldn't delete the project.")}}};
+   a.append(o,r,d);li.append(t,a);pl.append(li)})}
+ document.getElementById("np").addEventListener("submit",async e=>{e.preventDefault();
+  const n=document.getElementById("pn").value.trim();if(!n)return;showMsg(msg,"");
+  try{await createProject(u.uid,n.slice(0,60),document.getElementById("pg").value);document.getElementById("pn").value="";draw()}
+  catch(err){showMsg(msg,"Couldn't create the project. Check your Firestore rules.")}});
+ draw();});
 </script></body></html>

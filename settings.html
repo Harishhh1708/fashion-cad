@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Settings · FashionCAD Studio</title></head><body>
+<div class="dash"><aside class="side" id="side"></aside>
+<main class="main"><h1 style="font-size:2.4rem">Settings</h1>
+<form class="panel" id="pf"><h2>Preferences</h2>
+<div class="two"><div><label for="theme">Theme</label><select id="theme"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+<div><label for="units">Measurement units</label><select id="units"><option value="cm">Centimetres</option><option value="in">Inches</option><option value="mm">Millimetres</option></select></div></div>
+<label for="lang">Language</label><select id="lang"><option value="en">English</option><option value="ta">Tamil</option><option value="hi">Hindi</option></select>
+<p class="hint">The interface is English only for now. Your choice is saved for when translations are added.</p>
+<label class="check"><input type="checkbox" id="notif"> Email me about new features</label>
+<label class="check"><input type="checkbox" id="priv"> Keep my profile private</label>
+<div id="m1" class="msg" hidden role="status"></div><button class="btn" id="g1" type="submit">Save preferences</button></form>
+<form class="panel" id="cf" novalidate><h2>Change password</h2>
+<label for="cur">Current password</label><input id="cur" type="password" autocomplete="current-password">
+<label for="new">New password</label><input id="new" type="password" autocomplete="new-password">
+<label for="new2">Confirm new password</label><input id="new2" type="password" autocomplete="new-password">
+<div id="m2" class="msg" hidden role="status"></div><button class="btn" id="g2" type="submit">Change password</button></form>
+<form class="panel" id="df" novalidate><h2>Delete account</h2><p class="hint">This permanently deletes your account, profile and all projects.</p>
+<label for="dp">Password</label><input id="dp" type="password" autocomplete="current-password">
+<label for="dt">Type DELETE to confirm</label><input id="dt" autocomplete="off">
+<div id="m3" class="msg" hidden role="alert"></div><button class="btn danger" id="g3" type="submit">Delete my account</button></form>
+</main></div>
+<script type="module">
+import {requireAuth,showMsg,busy,friendly,passwordProblems} from "./js/auth.js";import {renderShell} from "./js/shell.js";
+import {loadProfile,saveProfile,changePassword,deleteAccount} from "./js/account.js";
+renderShell("settings.html");
+requireAuth(async u=>{
+ const $=id=>document.getElementById(id);let p={};try{p=await loadProfile(u.uid)}catch(e){}
+ const s=p.settings||{};$("theme").value=s.theme||document.documentElement.dataset.theme||"dark";$("units").value=s.units||"cm";$("lang").value=s.lang||"en";$("notif").checked=!!s.notif;$("priv").checked=s.priv!==false;
+ $("pf").addEventListener("submit",async e=>{e.preventDefault();const m=$("m1"),b=$("g1");
+  const settings={theme:$("theme").value,units:$("units").value,lang:$("lang").value,notif:$("notif").checked,priv:$("priv").checked};
+  document.documentElement.dataset.theme=settings.theme;try{localStorage.setItem("fc-theme",settings.theme);localStorage.setItem("fc-units",settings.units)}catch(x){}
+  busy(b,true,"Saving…");try{await saveProfile(u.uid,{settings});showMsg(m,"Preferences saved.","ok")}catch(err){showMsg(m,"Couldn't save preferences. Try again.")}busy(b,false)});
+ $("cf").addEventListener("submit",async e=>{e.preventDefault();const m=$("m2"),b=$("g2");
+  if(!$("cur").value)return showMsg(m,"Enter your current password.");
+  const pr=passwordProblems($("new").value);if(pr.length)return showMsg(m,"New password needs "+pr.join(", ")+".");
+  if($("new").value!==$("new2").value)return showMsg(m,"New passwords don't match.");
+  busy(b,true,"Changing…");try{await changePassword($("cur").value,$("new").value);showMsg(m,"Password changed.","ok");$("cf").reset()}catch(err){showMsg(m,friendly(err))}busy(b,false)});
+ $("df").addEventListener("submit",async e=>{e.preventDefault();const m=$("m3"),b=$("g3");
+  if(!$("dp").value)return showMsg(m,"Enter your password.");
+  if($("dt").value!=="DELETE")return showMsg(m,"Type DELETE in capitals to confirm.");
+  busy(b,true,"Deleting…");try{await deleteAccount($("dp").value);location.href="index.html"}catch(err){showMsg(m,friendly(err));busy(b,false)}});
+});
+</script></body></html>

@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Profile · FashionCAD Studio</title></head><body>
+<div class="dash"><aside class="side" id="side"></aside>
+<main class="main"><h1 style="font-size:2.4rem">Profile</h1>
+<form class="panel" id="f" novalidate>
+<div class="two"><div><label for="name">Full name</label><input id="name" maxlength="80" required></div>
+<div><label for="username">Username</label><input id="username" maxlength="20"></div></div>
+<label for="email">Email</label><input id="email" readonly><p class="hint">Your email is your login, so it can't be edited here.</p>
+<div class="two"><div><label for="phone">Phone</label><input id="phone" type="tel" maxlength="20"></div>
+<div><label for="country">Country</label><input id="country" maxlength="60"></div></div>
+<div class="two"><div><label for="role">Role</label><select id="role"><option>Student</option><option>Teacher</option><option>Professional</option></select></div>
+<div><label for="institute">Institute</label><input id="institute" maxlength="100"></div></div>
+<label for="bio">Bio</label><textarea id="bio" maxlength="300"></textarea>
+<div id="msg" class="msg" hidden role="status"></div>
+<button class="btn" id="go" type="submit">Save profile</button></form></main></div>
+<script type="module">
+import {requireAuth,showMsg,busy} from "./js/auth.js";import {renderShell} from "./js/shell.js";import {loadProfile,saveProfile} from "./js/account.js";
+renderShell("profile.html");
+requireAuth(async u=>{const f=document.getElementById("f"),m=document.getElementById("msg"),b=document.getElementById("go");
+ const ids=["name","username","phone","country","role","institute","bio"];
+ f.email.value=u.email;let p={};try{p=await loadProfile(u.uid)}catch(e){showMsg(m,"Couldn't load your profile.")}
+ ids.forEach(k=>{if(p[k]!==undefined)f[k].value=p[k]});if(!f.name.value)f.name.value=u.displayName||"";
+ f.addEventListener("submit",async e=>{e.preventDefault();
+  const d={};ids.forEach(k=>d[k]=f[k].value.trim());
+  if(!d.name)return showMsg(m,"Enter your name.");
+  if(d.username&&!/^[A-Za-z0-9_]{3,20}$/.test(d.username))return showMsg(m,"Username must be 3 to 20 letters, numbers or underscores.");
+  busy(b,true,"Saving…");showMsg(m,"");
+  try{await saveProfile(u.uid,d);showMsg(m,"Profile saved.","ok")}catch(err){showMsg(m,"Couldn't save your profile. Try again.")}
+  busy(b,false)})});
+</script></body></html>
