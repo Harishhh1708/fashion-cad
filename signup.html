@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Create account · FashionCAD Studio</title></head><body>
+<div class="wrap"><header class="nav"><a class="logo" href="index.html">Fashion<i>CAD</i></a></header>
+<main class="card"><h1>Create account</h1><p class="sub">Free for students and teachers.</p>
+<form id="f" novalidate>
+<label for="name">Full name</label><input id="name" autocomplete="name" required>
+<label for="username">Username</label><input id="username" autocomplete="username" pattern="[A-Za-z0-9_]{3,20}" required>
+<label for="email">Email</label><input id="email" type="email" autocomplete="email" required>
+<label for="phone">Phone (optional)</label><input id="phone" type="tel" autocomplete="tel">
+<label for="country">Country</label><input id="country" autocomplete="country-name">
+<label for="password">Password</label><div class="pw"><input id="password" type="password" autocomplete="new-password" required><button type="button" data-toggle="password">Show</button></div>
+<label for="confirm">Confirm password</label><input id="confirm" type="password" autocomplete="new-password" required>
+<label class="check"><input id="terms" type="checkbox"> I accept the terms of use</label>
+<div id="msg" class="msg" hidden role="alert"></div>
+<button class="btn" id="go" type="submit">Create account</button></form>
+<div class="links"><span>Already registered?</span><a href="login.html">Log in</a></div></main></div>
+<script type="module">
+import {configured,signUp,friendly,passwordProblems,showMsg,busy,wirePasswordToggles,setupBanner} from "./js/auth.js";
+setupBanner();wirePasswordToggles();
+const f=document.getElementById("f"),m=document.getElementById("msg"),b=document.getElementById("go");
+f.addEventListener("submit",async e=>{e.preventDefault();
+ const d={name:f.name.value.trim(),username:f.username.value.trim(),email:f.email.value.trim(),password:f.password.value,phone:f.phone.value.trim(),country:f.country.value.trim()};
+ if(!d.name||!d.email)return showMsg(m,"Enter your name and email.");
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(d.username))return showMsg(m,"Username must be 3 to 20 letters, numbers or underscores.");
+ const p=passwordProblems(d.password);if(p.length)return showMsg(m,"Password needs "+p.join(", ")+".");
+ if(d.password!==f.confirm.value)return showMsg(m,"Passwords don't match.");
+ if(!f.terms.checked)return showMsg(m,"Accept the terms of use to continue.");
+ if(!configured)return showMsg(m,"Firebase isn't connected yet. See the README.");
+ busy(b,true,"Creating account…");showMsg(m,"");
+ try{await signUp(d);location.href="verify-email.html"}catch(err){showMsg(m,friendly(err));busy(b,false)}});
+</script></body></html>

@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Dashboard · FashionCAD Studio</title></head><body>
+<div class="dash"><aside class="side"><a class="logo" href="dashboard.html">Fashion<i>CAD</i></a><nav style="margin-top:1.2rem">
+<a class="m" href="dashboard.html">Dashboard</a><a class="m soon">Pattern drafting (soon)</a><a class="m soon">Fabric library (soon)</a><a class="m soon">3D studio (soon)</a><a class="m soon">Projects (soon)</a>
+<a class="m" href="#" id="theme">Switch theme</a><a class="m" href="#" id="out">Log out</a></nav></aside>
+<main class="main"><h1 style="font-size:2.4rem" id="hi">Your studio</h1><p style="color:var(--dim)" id="sub"></p>
+<div class="grid"><div class="t"><h3>New pattern</h3><p>The 2D drafting canvas arrives in Phase 3.</p><span class="tag">Not available yet</span></div>
+<div class="t"><h3>Browse fabrics</h3><p>The fabric library arrives in Phase 4.</p><span class="tag">Not available yet</span></div>
+<div class="t"><h3>Open 3D studio</h3><p>The 3D preview arrives in Phase 5.</p><span class="tag">Not available yet</span></div></div></main></div>
+<script type="module">
+import {requireAuth,logOut,db,doc,getDoc} from "./js/auth.js";
+requireAuth(async u=>{
+ let name=u.displayName||"";try{const s=await getDoc(doc(db,"users",u.uid));if(s.exists())name=s.data().name||name}catch(e){}
+ document.getElementById("hi").textContent=name?"Welcome, "+name.split(" ")[0]:"Your studio";
+ document.getElementById("sub").textContent="Signed in as "+u.email;});
+document.getElementById("out").onclick=async e=>{e.preventDefault();await logOut();location.href="login.html"};
+document.getElementById("theme").onclick=e=>{e.preventDefault();const r=document.documentElement,n=r.dataset.theme==="light"?"dark":"light";r.dataset.theme=n;try{localStorage.setItem("fc-theme",n)}catch(x){}};
+</script></body></html>

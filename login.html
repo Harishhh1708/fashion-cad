@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Log in · FashionCAD Studio</title></head><body>
+<div class="wrap"><header class="nav"><a class="logo" href="index.html">Fashion<i>CAD</i></a></header>
+<main class="card"><h1>Log in</h1><p class="sub">Welcome back to your studio.</p>
+<form id="f" novalidate>
+<label for="email">Email</label><input id="email" type="email" autocomplete="email" required>
+<label for="password">Password</label><div class="pw"><input id="password" type="password" autocomplete="current-password" required><button type="button" data-toggle="password">Show</button></div>
+<label class="check"><input id="remember" type="checkbox" checked> Keep me logged in on this device</label>
+<div id="msg" class="msg" hidden role="alert"></div>
+<button class="btn" id="go" type="submit">Log in</button></form>
+<div class="links"><a href="forgot-password.html">Forgot password?</a><a href="signup.html">Create account</a></div></main></div>
+<script type="module">
+import {configured,logIn,friendly,showMsg,busy,wirePasswordToggles,setupBanner,REQUIRE_EMAIL_VERIFICATION} from "./js/auth.js";
+setupBanner();wirePasswordToggles();
+const f=document.getElementById("f"),m=document.getElementById("msg"),b=document.getElementById("go");
+f.addEventListener("submit",async e=>{e.preventDefault();
+ const email=f.email.value.trim(),pw=f.password.value;
+ if(!email||!pw)return showMsg(m,"Enter your email and password.");
+ if(!configured)return showMsg(m,"Firebase isn't connected yet. See the README.");
+ busy(b,true,"Logging in…");showMsg(m,"");
+ try{const u=await logIn(email,pw,f.remember.checked);
+  location.href=(REQUIRE_EMAIL_VERIFICATION&&!u.emailVerified)?"verify-email.html":"dashboard.html";
+ }catch(err){showMsg(m,friendly(err));busy(b,false)}});
+</script></body></html>

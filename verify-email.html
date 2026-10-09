@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/base.css"><script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script><title>Verify email · FashionCAD Studio</title></head><body>
+<div class="wrap"><header class="nav"><a class="logo" href="index.html">Fashion<i>CAD</i></a></header>
+<main class="card"><h1>Check your inbox</h1><p class="sub" id="who">We sent a verification link to your email. Open it, then come back here.</p>
+<div id="msg" class="msg" hidden role="status"></div>
+<button class="btn" id="done" type="button">I've verified my email</button>
+<button class="btn ghost" id="resend" type="button">Resend email</button>
+<div class="links"><a href="login.html" id="out">Use a different account</a></div></main></div>
+<script type="module">
+import {configured,auth,onAuthStateChanged,resendVerification,logOut,friendly,showMsg,setupBanner} from "./js/auth.js";
+setupBanner();const m=document.getElementById("msg");
+if(!configured){showMsg(m,"Firebase isn't connected yet. See the README.")}else{
+onAuthStateChanged(auth,u=>{if(!u)return location.replace("login.html");
+ document.getElementById("who").textContent="We sent a verification link to "+u.email+". Open it, then come back here.";
+ if(u.emailVerified)location.replace("dashboard.html")});
+document.getElementById("done").onclick=async()=>{await auth.currentUser.reload();
+ if(auth.currentUser.emailVerified)location.href="dashboard.html";else showMsg(m,"Not verified yet. Open the link in the email first.")};
+document.getElementById("resend").onclick=async()=>{try{await resendVerification();showMsg(m,"Verification email sent.","ok")}catch(e){showMsg(m,friendly(e))}};
+document.getElementById("out").onclick=async e=>{e.preventDefault();await logOut();location.href="login.html"};}
+</script></body></html>
