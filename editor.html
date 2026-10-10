@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css"><link rel="stylesheet" href="css/workspace.css">
+<script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Pattern editor · FashionCAD Studio</title></head><body class="ed"><div class="app">
+<header class="top"><a class="logo" href="dashboard.html" id="back">Fashion<i>CAD</i></a><span class="pname" id="pname">Loading…</span><span class="st" id="status"></span><span class="sp"></span>
+<select id="unit" aria-label="Units"><option value="cm">cm</option><option value="in">inches</option><option value="mm">mm</option></select>
+<button class="mini" id="undo" title="Ctrl+Z">Undo</button><button class="mini" id="redo" title="Ctrl+Y">Redo</button><button class="mini" id="fit">Fit view</button>
+<button class="mini" id="svgb">SVG</button><button class="mini" id="pngb">PNG</button><button class="mini" id="prnb" title="Opens print dialog at true scale. Choose Save as PDF.">Print / PDF</button>
+<button class="mini pri" id="save" title="Ctrl+S">Save</button></header>
+<div class="body"><nav class="tools" id="tools" aria-label="Tools"></nav>
+<div class="stage"><canvas id="cv" tabindex="0" aria-label="Pattern drawing canvas"></canvas></div>
+<aside class="side2"><div id="msg" class="msg" hidden role="alert"></div><div id="props"></div><hr><h3>Shapes</h3><ul class="shapes" id="list"></ul></aside></div>
+<footer class="bar"><span id="st-pos">0, 0</span><span id="st-len"></span><span id="st-hint"></span><label><input type="checkbox" id="snap" checked> Snap</label><label><input type="checkbox" id="gridchk" checked> Grid</label></footer></div>
+<script type="module" src="js/pattern-editor.js"></script></body></html>

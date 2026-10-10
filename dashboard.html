@@ -6,7 +6,7 @@
 <div><label for="pg">Garment</label><select id="pg"><option>T-Shirt</option><option>Shirt</option><option>Kurta</option><option>Blouse</option><option>Dress</option><option>Trousers</option><option>Jacket</option><option>Other</option></select></div>
 <button class="btn" type="submit">Create</button></form>
 <div id="msg" class="msg" hidden role="alert" style="max-width:760px"></div>
-<h2 style="margin-top:2rem">Your projects</h2><p class="hint">The pattern editor opens these in Phase 3. For now you can create, rename and delete them.</p>
+<h2 style="margin-top:2rem">Your projects</h2><p class="hint">Open a project to draft its pattern.</p>
 <ul class="plist" id="pl"></ul></main></div>
 <script type="module">
 import {requireAuth,showMsg} from "./js/auth.js";import {renderShell} from "./js/shell.js";
@@ -26,7 +26,7 @@ requireAuth(async u=>{
    const t=document.createElement("div");const b=document.createElement("strong");b.textContent=p.name;
    const s=document.createElement("small");s.textContent=" "+(p.garmentType||"");t.append(b,document.createElement("br"),s);
    const a=document.createElement("div");a.className="acts";
-   const o=document.createElement("button");o.className="mini";o.textContent="Open";o.disabled=true;o.title="Editor arrives in Phase 3";
+   const o=document.createElement("button");o.className="mini";o.textContent="Open";o.onclick=()=>{location.href="editor.html?id="+encodeURIComponent(p.id)};
    const r=document.createElement("button");r.className="mini";r.textContent="Rename";
    r.onclick=async()=>{const n=prompt("New project name",p.name);if(n&&n.trim()){try{await renameProject(u.uid,p.id,n.trim().slice(0,60));draw()}catch(e){showMsg(msg,"Couldn't rename the project.")}}};
    const d=document.createElement("button");d.className="mini";d.textContent="Delete";

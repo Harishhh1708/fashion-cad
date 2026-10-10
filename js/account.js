@@ -31,3 +31,10 @@ export const createProject = (uid, name, garmentType) =>
 export const renameProject = (uid, id, name) =>
   updateDoc(doc(db, "users", uid, "projects", id), { name, updatedAt: serverTimestamp() });
 export const removeProject = (uid, id) => deleteDoc(doc(db, "users", uid, "projects", id));
+
+export async function getProject(uid, id) {
+  const s = await getDoc(doc(db, "users", uid, "projects", id));
+  return s.exists() ? { id: s.id, ...s.data() } : null;
+}
+export const saveProjectData = (uid, id, data) =>
+  updateDoc(doc(db, "users", uid, "projects", id), { ...data, updatedAt: serverTimestamp() });
