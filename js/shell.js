@@ -1,7 +1,7 @@
 import { logOut } from "./auth.js";
 export function renderShell(active) {
-  const links = [["dashboard.html","Dashboard"],["profile.html","Profile"],["settings.html","Settings"]];
-  const soon = ["Fabric library","3D studio"];
+  const links = [["dashboard.html","Dashboard"],["garments.html","Garments"],["fabrics.html","Fabrics"],["profile.html","Profile"],["settings.html","Settings"]];
+  const soon = ["3D studio"];
   document.getElementById("side").innerHTML =
     '<a class="logo" href="dashboard.html">Fashion<i>CAD</i></a><nav style="margin-top:1.2rem">' +
     links.map(([h,t]) => '<a class="m" href="'+h+'"'+(h===active?' aria-current="page" style="background:var(--mat)"':'')+'>'+t+'</a>').join("") +

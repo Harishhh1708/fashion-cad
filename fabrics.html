@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css"><link rel="stylesheet" href="css/catalog.css">
+<script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Fabrics · FashionCAD Studio</title></head><body>
+<div class="dash"><aside class="side" id="side"></aside><main class="main">
+<h1 style="font-size:2.4rem">Fabric library</h1>
+<p style="color:var(--dim);max-width:62ch"><span class="demo">SAMPLE VALUES</span> Every number here is a teaching sample, not lab data. Real fabrics vary by mill, blend and finish. You can edit any value, and your edits are saved in this browser only.</p>
+<div class="filters">
+<div class="grow"><label for="q">Search</label><input id="q" type="search" placeholder="Silk, denim, Kanjeevaram…"></div>
+<div><label for="cat">Category</label><select id="cat"><option value="">All</option></select></div>
+<div><label for="sort">Sort by</label><select id="sort"><option value="name">Name</option><option value="gsm-asc">GSM, light to heavy</option><option value="gsm-desc">GSM, heavy to light</option><option value="drape">Drape, best first</option><option value="cost-asc">Cost, low to high</option><option value="sust">Sustainability, best first</option></select></div>
+<label class="check"><input type="checkbox" id="str"> Stretchy only</label></div>
+<div id="msg" class="msg" hidden role="alert"></div><p class="count" id="count" aria-live="polite"></p>
+<div class="cards" id="cards"></div></main></div>
+<dialog id="dlg" aria-labelledby="dt"><button class="mini dclose" id="dx">Close</button><h2 id="dt"></h2><p id="dsub" style="color:var(--dim);margin-top:-.4rem"></p>
+<div class="dgrid"><div><canvas id="dc" width="260" height="170" aria-label="Illustrative fabric swatch"></canvas><div class="chips" id="chips" role="group" aria-label="Swatch colour"></div><p class="hint">Swatches are drawn illustrations, not photos.</p></div><div><table class="props" id="tbl"></table></div></div>
+<h3 style="margin-top:1rem">Recommended garments</h3><div class="links2" id="rec"></div>
+<details><summary>Edit sample values</summary><form id="ef" class="edits" novalidate></form><div id="em" class="msg" hidden role="alert"></div>
+<button class="mini" id="reset" type="button" style="margin-top:.8rem">Reset to sample values</button></details></dialog>
+<script type="module">
+import {requireAuth,showMsg} from "./js/auth.js";import {renderShell} from "./js/shell.js";import {drawSwatch} from "./js/swatch.js";
+renderShell("fabrics.html");
+requireAuth(async()=>{
+ const $=id=>document.getElementById(id),msg=$("msg");let base=[];
+ try{base=(await (await fetch("data/fabrics.json")).json()).fabrics}catch(e){showMsg(msg,"Couldn't load the fabric library.");return}
+ const KEY="fc-fabric-edits";let edits={};try{edits=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+ const saveEdits=()=>{try{localStorage.setItem(KEY,JSON.stringify(edits))}catch(e){showMsg(msg,"Couldn't save your edits in this browser.")}};
+ const get=f=>({...f,...(edits[f.id]||{})});
+ const NUM=[["gsm","Weight","g/m²",5,1500,1],["thickness","Thickness","mm",0.05,20,0.05],["stretch","Stretch","%",0,300,1],["shrinkage","Shrinkage","%",0,30,0.5],["cost","Cost per metre (sample)","₹",0,100000,1]];
+ const RATE=[["softness","Softness"],["drape","Drape"],["breathability","Breathability"],["durability","Durability"],["opacity","Opacity (5 = fully opaque)"],["wrinkleResistance","Wrinkle resistance"],["waterResistance","Water resistance"],["heatResistance","Heat resistance"],["gloss","Gloss"],["roughness","Surface roughness"],["sustainability","Sustainability"]];
+ [...new Set(base.map(f=>f.category))].sort().forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;$("cat").append(o)});
+ const dots=n=>"●".repeat(n)+"○".repeat(5-n);
+ const elast=s=>s<5?"Rigid":s<15?"Low":s<40?"Medium":"High";
+ function render(){
+  const q=$("q").value.trim().toLowerCase();
+  let l=base.map(get).filter(f=>(!q||(f.name+" "+f.category+" "+f.origin).toLowerCase().includes(q))&&(!$("cat").value||f.category===$("cat").value)&&(!$("str").checked||f.stretch>=10));
+  const s=$("sort").value;
+  l.sort((a,b)=>s==="gsm-asc"?a.gsm-b.gsm:s==="gsm-desc"?b.gsm-a.gsm:s==="drape"?b.drape-a.drape:s==="cost-asc"?a.cost-b.cost:s==="sust"?b.sustainability-a.sustainability:a.name.localeCompare(b.name));
+  $("count").textContent=l.length+" of "+base.length+" fabrics";$("cards").textContent="";
+  if(!l.length){$("cards").textContent="No fabrics match. Try a shorter search.";return}
+  l.forEach((f,i)=>{const b=document.createElement("button");b.className="fcard";const c=document.createElement("canvas");c.width=220;c.height=120;drawSwatch(c,f.texture,f.colors[0],i+1);
+   const d=document.createElement("div");d.className="in";const n=document.createElement("strong");n.textContent=f.name;const m=document.createElement("small");m.textContent=f.category+" · "+f.gsm+" g/m² · drape "+f.drape+"/5";d.append(n,m);b.append(c,d);b.onclick=()=>openDlg(f.id);$("cards").append(b)})}
+ let curId=null,curColor=0;
+ function openDlg(id){curId=id;curColor=0;fill();$("dlg").showModal()}
+ function fill(){
+  const f=get(base.find(x=>x.id===curId));$("dt").textContent=f.name;$("dsub").textContent=f.category+(f.origin?" · "+f.origin:"")+(edits[f.id]?" · edited by you":"")+(f.note?" · "+f.note:"");
+  drawSwatch($("dc"),f.texture,f.colors[curColor],7);$("chips").textContent="";
+  f.colors.forEach((c,i)=>{const b=document.createElement("button");b.className="chip";b.style.background=c;b.setAttribute("aria-label","Colour "+(i+1));b.setAttribute("aria-pressed",i===curColor);b.onclick=()=>{curColor=i;fill()};$("chips").append(b)});
+  const rows=[["Texture / structure",f.structure],["Weight",f.gsm+" g/m²"],["Thickness",f.thickness+" mm"],["Stretch",f.stretch+"%"],["Elasticity",elast(f.stretch)],["Shrinkage",f.shrinkage+"%"],...RATE.map(([k,l])=>[l,null,f[k]]),["Embroidery",f.embroidery],["Printing",f.print],["Patterns",f.patterns],["Care",f.care],["Cost per metre (sample)","₹"+f.cost]];
+  $("tbl").textContent="";rows.forEach(r=>{const tr=document.createElement("tr"),th=document.createElement("th"),td=document.createElement("td");th.textContent=r[0];if(r[1]===null){const s=document.createElement("span");s.className="rate";s.textContent=dots(r[2]);s.setAttribute("role","img");s.setAttribute("aria-label",r[2]+" out of 5");td.append(s)}else td.textContent=r[1];tr.append(th,td);$("tbl").append(tr)});
+  $("rec").textContent="";if(!f.recommended.length){$("rec").textContent="No specific recommendations."}f.recommended.forEach(g=>{const a=document.createElement("a");a.href="garments.html?q="+encodeURIComponent(g);a.textContent=g;$("rec").append(a)});
+  const form=$("ef");form.textContent="";
+  [...NUM.map(([k,l,u,mn,mx,st])=>[k,l+" ("+u+")",mn,mx,st]),...RATE.map(([k,l])=>[k,l+" (1 to 5)",1,5,1])].forEach(([k,l,mn,mx,st])=>{const lb=document.createElement("label");lb.textContent=l;const i=document.createElement("input");i.type="number";i.min=mn;i.max=mx;i.step=st;i.value=f[k];
+   i.addEventListener("change",()=>{const v=parseFloat(i.value);if(isNaN(v)||v<mn||v>mx){showMsg($("em"),l+" must be between "+mn+" and "+mx+".");i.value=f[k];return}showMsg($("em"),"");edits[f.id]=Object.assign(edits[f.id]||{},{[k]:v});saveEdits();fill();render()});lb.append(i);form.append(lb)})}
+ $("reset").onclick=()=>{delete edits[curId];saveEdits();showMsg($("em"),"");fill();render()};
+ $("dx").onclick=()=>$("dlg").close();$("dlg").addEventListener("click",e=>{if(e.target===$("dlg"))$("dlg").close()});
+ ["q","cat","sort","str"].forEach(id=>$(id).addEventListener("input",render));render();
+});
+</script></body></html>

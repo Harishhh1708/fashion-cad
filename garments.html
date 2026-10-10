@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css"><link rel="stylesheet" href="css/catalog.css">
+<script>try{var t=localStorage.getItem("fc-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Garments · FashionCAD Studio</title></head><body>
+<div class="dash"><aside class="side" id="side"></aside><main class="main">
+<h1 style="font-size:2.4rem">Garment catalog</h1><p style="color:var(--dim);max-width:60ch">Browse garment families from around the world and start a pattern project from any of them. The list grows by editing <code>data/garments.json</code>.</p>
+<div class="filters">
+<div class="grow"><label for="q">Search</label><input id="q" type="search" placeholder="Kurta, saree, jeans…"></div>
+<div><label for="fam">Family</label><select id="fam"><option value="">All</option></select></div>
+<div><label for="reg">Region</label><select id="reg"><option value="">All</option></select></div>
+<div><label for="gen">For</label><select id="gen"><option value="">All</option></select></div></div>
+<div id="msg" class="msg" hidden role="alert"></div><p class="count" id="count" aria-live="polite"></p>
+<div class="cards" id="cards"></div><button class="btn ghost more" id="more" hidden style="width:auto">Show more</button></main></div>
+<script type="module">
+import {requireAuth,showMsg} from "./js/auth.js";import {renderShell} from "./js/shell.js";import {createProject} from "./js/account.js";
+renderShell("garments.html");
+requireAuth(async u=>{
+ const $=id=>document.getElementById(id),msg=$("msg");let all=[];
+ try{all=(await (await fetch("data/garments.json")).json()).garments}catch(e){showMsg(msg,"Couldn't load the garment catalog.");return}
+ const fill=(id,key)=>[...new Set(all.map(g=>g[key]))].sort().forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;$(id).append(o)});
+ fill("fam","family");fill("reg","region");fill("gen","gender");
+ const qp=new URLSearchParams(location.search).get("q");if(qp)$("q").value=qp;
+ let shown=60,list=[];
+ function tag(t){const s=document.createElement("span");s.className="tag";s.textContent=t;return s}
+ function render(){
+  const q=$("q").value.trim().toLowerCase();
+  list=all.filter(g=>(!q||(g.name+" "+g.family).toLowerCase().includes(q))&&(!$("fam").value||g.family===$("fam").value)&&(!$("reg").value||g.region===$("reg").value)&&(!$("gen").value||g.gender===$("gen").value));
+  $("count").textContent=list.length+" of "+all.length+" garments";$("cards").textContent="";
+  if(!list.length){$("cards").textContent="No garments match. Try a shorter search.";$("more").hidden=true;return}
+  list.slice(0,shown).forEach(g=>{const a=document.createElement("article"),h=document.createElement("h3");h.textContent=g.name;
+   const m=document.createElement("div");m.className="meta";m.append(tag(g.family),tag(g.region),tag(g.gender));a.append(h,m);
+   if(g.pieces){const s=document.createElement("small");s.textContent="Typical pieces: "+g.pieces.join(", ");a.append(s)}
+   const b=document.createElement("button");b.className="mini push";b.textContent="Start project";
+   b.onclick=async()=>{b.disabled=true;b.textContent="Creating…";try{const r=await createProject(u.uid,g.name+" project",g.name);location.href="editor.html?id="+encodeURIComponent(r.id)}catch(e){b.disabled=false;b.textContent="Start project";showMsg(msg,"Couldn't create the project. Check your connection and Firestore rules.")}};
+   a.append(b);$("cards").append(a)});
+  $("more").hidden=list.length<=shown}
+ ["q","fam","reg","gen"].forEach(id=>$(id).addEventListener("input",()=>{shown=60;render()}));
+ $("more").onclick=()=>{shown+=60;render()};render();
+});
+</script></body></html>
